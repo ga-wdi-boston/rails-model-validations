@@ -1,4 +1,6 @@
 class Person < ActiveRecord::Base
   has_many :pets, inverse_of: :person
-  belongs_to :place, inverse_of: :people
+
+  has_many :places, through: :addresses
+  has_many :addresses
 end
