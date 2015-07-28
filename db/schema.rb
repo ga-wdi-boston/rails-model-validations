@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150728192739) do
+ActiveRecord::Schema.define(version: 20150728200308) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -25,6 +25,28 @@ ActiveRecord::Schema.define(version: 20150728192739) do
 
   add_index "addresses", ["person_id"], name: "index_addresses_on_person_id", using: :btree
   add_index "addresses", ["place_id"], name: "index_addresses_on_place_id", using: :btree
+
+  create_table "companies", force: :cascade do |t|
+    t.string   "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "developers", force: :cascade do |t|
+    t.string   "given_name"
+    t.string   "surname"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "jobs", force: :cascade do |t|
+    t.integer "company_id"
+    t.integer "developer_id"
+    t.integer "salary"
+  end
+
+  add_index "jobs", ["company_id"], name: "index_jobs_on_company_id", using: :btree
+  add_index "jobs", ["developer_id"], name: "index_jobs_on_developer_id", using: :btree
 
   create_table "people", force: :cascade do |t|
     t.string   "surname"
@@ -61,6 +83,8 @@ ActiveRecord::Schema.define(version: 20150728192739) do
 
   add_foreign_key "addresses", "people"
   add_foreign_key "addresses", "places"
+  add_foreign_key "jobs", "companies"
+  add_foreign_key "jobs", "developers"
   add_foreign_key "people", "places"
   add_foreign_key "pets", "people"
 end
