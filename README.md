@@ -32,7 +32,7 @@ Diagram these two relationships using an ERD. You should have three entities and
 Exercise: Join Table Migration
 ------------------------------
 
-Generate a migration for `addresses`. `addresses` should have references to both `person` and `place`.
+Generate a model and migration for `addresses`. `addresses` should have references to both `person` and `place`.
 
 After you generate the migration, inspect it visually and if it looks right, run `rake db:migrate`. Next enter `rails db` and inspect the `addresses` table with `\d addresses`. Do the columns look as you'd expect? Your output should resemble:
 
