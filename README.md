@@ -1,6 +1,6 @@
 ![General Assembly Logo](http://i.imgur.com/ke8USTq.png)
 
-# An introduction to ActiveRecord validations and migration constraints
+# ActiveRecord Migration Constraints and Model Validations
 
 ## Instructions
 
@@ -35,20 +35,19 @@ Rails's perspective is that the best places for dealing with data integrity are 
 
 Let's look at some ways ActiveRecord helps us to maintain data integrity.
 
-## Validation in Migrations - ActiveRecord Constraints
+## Migration Constraints
 
 A **constraint**, sometimes called a _table constraint_ or _columnconstraint_, is a restriction on the data allowed in a table column or columns. We've already seen a few of these in previous projects' migration files:
 
 ```ruby
-class CreatePeople < ActiveRecord::Migration
+class CreateCountries < ActiveRecord::Migration
   def change
-    create_table :people do |t|
-      t.string :surname
-      t.string :given_name
-      t.string :gender
-      t.string :dob
+    create_table :countries do |t|
+      t.string :name
+      t.integer :population
+      t.string :language
 
-      t.timestamps null: false   # constraint
+      t.timestamps null: false # `null: false` is a constraint
     end
   end
 end
@@ -61,71 +60,113 @@ Different SQL implementations feature a wide variety of constraints that they ca
 
   Equivalent to the `NOT NULL` constraint in SQL. This prevents the database from saving a row without a value in that particular column into the database.
 
-  e.g.
+  **EXAMPLE :**
+  Suppose I want to ensure that every country entered has a name - blank names are forbidden. In the migration file for Countries, I can write:
   ```ruby
-  t.timestamps null: false
+  class CreateCountries < ActiveRecord::Migration
+    def change
+      create_table :countries do |t|
+        t.string :name, null: false       # added ', null: false'
+        t.integer :population
+        t.string :language
+
+        t.timestamps null: false
+      end
+    end
+  end
   ```
 
-* **`default: <some value>`**
-
-  Sets a default value for a column.
-
-  e.g.
-  ```ruby
-  t.integer :width, :height, null: false, default: 0
-  ```
+  If I run this migation, and then open up the Rails Console, I find that I am unable to `create` new Countries without specifying names for them.
 
 * **`unique: true` / `index: {unique: true}`**
 
-  A uniqueness constraint. This is mostly used in the context of (a) adding indices to tables that, for whatever reason, don't have them, or (b) creating new custom indices based on properties.
-  > Be careful: a `NULL` value never equals anything, including itself, so `NULL` values are always unique.
-  <!-- This is sometimes desirable, but in most cases - pretty much any case where we're not adding an index - we'll also want the `null:false` option. -->
+  A uniqueness constraint. This can be used to define a single column as having only unique values, or to specify that certain _combinations of column values_ must be unique.
 
-  e.g.
+  **EXAMPLE :**
+  Consider a second model, Person. Suppose I want to ensure that each person has a unique phone number, and a unique full name (`given_name` + `surname`); I might make the following change to the `CreatePeople` migration.
   ```ruby
-  add_column :pets, :species, :string
-  add_index :pets, :species, name: 'species_index', unique: true
+  class CreatePeople < ActiveRecord::Migration
+    def change
+      create_table :people do |t|
+        t.string :given_name
+        t.string :surname
+        t.string :phone_number
+
+        t.timestamps null: false
+      end
+
+      add_index :people, :phone_number, unique: true
+      add_index :people, [:given_name, :surname], unique: true
+    end
+  end
   ```
 
-* **`index: <hash>`**
+  _**Be careful**: a `NULL` value never equals anything, including itself, so `NULL` values are always unique. This is sometimes desirable, but in most cases we'll also want the `null:false` option._
 
-  Passes on any parameters given in the hash to the `add_index` method.
-
-  e.g.
+  > ##### NOTEWORTHY ASIDE
+  >
+  > Though it's not a constraint, you should know that `index: <hash>` passes on any parameters given in the hash to the `add_index` method.
+  >
   ```ruby
-  add_column :pets, :species, :string, index: {name: 'species_index', unique: true}
-  # Or, alternatively
-  add_column :pets, :species, :string
-  add_index :pets, [:species], name: 'species_index', unique: true
+  add_column :people, :phone_number, :string, index: {unique: true}
+  # Above and below are equivalent.
+  add_column :people, :phone_number, :string
+  add_index :people, :phone_number, unique: true
   ```
-
-  > You may also see `index: true` in an add_reference method; in that context, `index: true` is telling Rails to create a new index column and to make that the reference. However, this is the only context in which this will work.
+  > You may also see `index: true` in an add_reference method; in that context, `index: true` is telling Rails to create a new index column and to make that the reference.
 
 * **`foreign_key: true` / `references: {foreign_key: true}`**
 
-  A referential constraint, requiring that a row in a "child" table have a matching identifier in the "parent" table. , is create with the
-  `foreign_key: true` option to the table `references` method or the
-  migration `add_reference` method.  
+  A referential constraint, requiring that a row in a "child" table have a matching identifier in the "parent" table.
 
-  <!-- >As with the uniqueness constraint, this doesn't prevent null values in the referring column, so we'll usually want to include the `null:false` option. -->
+  _As with the uniqueness constraint, this doesn't prevent null values in the referring column, so we'll usually want to include the `null:false` option._
 
-  e.g.
+  **EXAMPLE :**
+  Now that we have 'Country' and 'Person' resources, suppose we want to link them together through a third resource called 'Citizenship'. I run `rails g model Citizenship status:string date_obtained:date`, which builds a new model and migration file.
+  I can then create two new empty migrations to link all the tables together.
   ```ruby
-  add_reference :pets, :owner, index: true, foreign_key: true
-  # Or
-  add_index :pets, :person_id, unique: true
-  add_foreign_key :pets, :people
+  class AddPeopleToCitizenships < ActiveRecord::Migration
+    def change
+      add_reference :citizenships, :person, index: true, foreign_key: true
+    end
+  end
   ```
+  ```ruby
+  class AddCountriesToCitizenships < ActiveRecord::Migration
+    def change
+      add_reference :citizenships, :country, index: true, foreign_key: true
+    end
+  end
+  ```
+  >If the '...\_id' column was already added by a previous migration, I could use `add_foreign_key` method instead of `add_reference` to add the foreign key constraint to an existing column.
 
-  >If the '****\_id' column was already added by a previous migration, we can just use the `add_foreign_key` method to add the constraint to that column in a new migration.
+  Once I add the appropriate methods to the models, I can test it in the Rails Console.
+  ```ruby
+  class Country < ActiveRecord::Base
+    has_many :citizenships
+    has_many :people, through: :citizenships
+  end
+  ```
+  ```ruby
+  class Person < ActiveRecord::Base
+    has_many :citizenships
+    has_many :countries, through: :citizenships
+  end
+  ```
+  ```ruby
+  class Citizenship < ActiveRecord::Base
+    belongs_to :country
+    belongs_to :person
+  end
+  ```
 
 ### We Do :: ActiveRecord Constraints
 
-<!--  -->
+In your groups, follow the example above and create three new resources that have a `has_many ... , through ... ` relationship, and add non-null, uniqueness, and foreign key constraints to all three via the migration files.
 
 ### You Do :: ActiveRecord Constraints
 
-<!--  -->
+Individually, create two new resources in the same application with a `has_many`/`belongs_to` relationship.
 
 ## Active Record Validations
 
