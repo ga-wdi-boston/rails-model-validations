@@ -16,10 +16,24 @@ By the end of this lesson, students should be able to:
 
 ## Introduction
 
-Data are valuable assets to web companies, often more so than code or
-employees.  This makes data integrity an important aspect of any
-companies strategy for success.  We'll look at some ways ActiveRecord
-supports data integrity.
+A company's data can sometimes be its most valuable asset, even more so than code or employees. There are several different places where data integrity can be maintained within an application, including:
+* within the database itself
+* on the client-side (implemented in JavaScript)
+* in the controllers
+
+However, each of these approaches has advantages and disadvantages.
+
+| Location | Pro     | Con     |
+| :------- | :------ | :------ |
+| Database | Useful if multiple apps use the same DB. Sometimes faster than other approaches. | Implementation depends on the specific DB you use. |
+| Client | Independent of our back-end Implementation. Quick feedback for users. | Unreliable on its own, and can be circumvented. |
+| Controller | Within the app, so it can't be circumvented. In Ruby, so independent of our DB choice. | Difficult to test and maintain. Controllers should be sparse! |
+
+Rails's perspective is that the best places for dealing with data integrity are in migrations and in the model, since they have all of the advantages of controller validation but none of the disadvantages.
+
+> Except strong parameters - as you know, that kind of validation is conventionally done in the controller.
+
+Let's look at some ways ActiveRecord helps us to maintain data integrity.
 
 ## ActiveRecord migrations and constraints
 
