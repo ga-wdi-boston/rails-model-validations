@@ -168,29 +168,61 @@ In your groups, follow the example above and create three new resources that hav
 
 Individually, create two new resources in the same application with a `has_many`/`belongs_to` relationship.
 
-## Active Record Validations
+## Model Validations
 
-ActiveRecord provides validators which are checks on model properties.
-If any requested check fails, the model cannot be saved.  We'll use
-validations for the same reason we use constraints, to help ensure data
-integrity.
+ActiveRecord::Base provides **validator** methods that allow us to perform checks on model properties. For certain model methods (`create`, `create!`, `save`, `save!`, `update`, `update!`), if any requested check fails, the model cannot be saved.  There are many more model validation methods than there are ways to set constraints in migration files, so you'll often see more validation done in models than in migrations.
 
-To prevent empty values we'll use `validates <property>, presence: true`.
-This is a slightly more restrictive check than `null: false`, it
-disallows both empty values, `nil` in ruby and `NULL` in the database,
-and it also disallows empty strings (for string properties).
+Let's look at how we might validate the same three things we wanted to validate above: empty values, uniqueness, and references.
 
-To ensure that a property is unique, we'll use `validates <property>,
-uniqueness: true`.  If this is a multi-column uniqueness check, we
-replace the boolean with a hash providing a scope for the uniqueness
-check, e.g. `{scope: <other property>}`.
+* **Empty Values**
 
-For referential integrity checks, we'll use `validates <model>,
-presence: true`, where `<model>` is the symbol we passed to
-`belongs_to`.
+  To prevent empty values we'll use `validates <property>, presence: true`. This is a slightly more restrictive check than `null: false`, it disallows both empty values, `nil` in ruby and `NULL` in the database, and it also disallows empty strings (for string properties).
 
-There are other validators and mechanisms to create our own.  Let's look
-at the Rails Guide for Active Record Validations.
+  **EXAMPLE :**
+  To set an empty-value validator in our Country model, I might write
+  ```ruby
+  class Country < ActiveRecord::Base
+    has_many :citizenships
+    has_many :people, through: :citizenships
+
+    validates :name, presence: true
+  end
+  ```
+
+* **Uniqueness**
+
+  To ensure that a property is unique, we'll use `validates <property>, uniqueness: true`.  If this is a multi-column uniqueness check, we replace the boolean with a hash providing a scope for the uniqueness check, e.g. `{scope: <other property>}`.
+
+  **EXAMPLE :**
+  To set some uniqueness validators in my Person model, I might write
+  ```ruby
+  class Person < ActiveRecord::Base
+    has_many :citizenships
+    has_many :countries, through: :citizenships
+
+    validates :phone_number, uniqueness: true
+    validates :given_name, uniqueness: {scope: :surname}
+    validates :surname, uniqueness: {scope: :given_name}
+  end
+  ```
+
+* **References**
+
+  For referential integrity checks, we'll use `validates <model>, presence: true`, where `<model>` is the symbol we passed to `belongs_to`.
+
+  **EXAMPLE :**
+  I want to test that a Citizenship instance refers to an instance of Country and an instance of Person. I might write the following:
+  ```ruby
+  class Citizenship < ActiveRecord::Base
+    belongs_to :country
+    belongs_to :person
+
+    validates :country, presence: true
+    validates :person, presence: true
+  end
+  ```
+
+ActiveRecord::Base comes with a slew of other validators we can use, as well as the mechanisms to create our own custom validators.  
 
 ## Additional resources
 
