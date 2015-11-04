@@ -1,1 +1,0 @@
-Place.destroy(city: 'Cambridge')
