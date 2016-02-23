@@ -17,7 +17,7 @@ By the end of this lesson, students should be able to:
 ## Introduction
 
 A company's data can sometimes be its most valuable asset,
- even more so than code or employees.
+ more so than code or even employees.
 There are several different places where data integrity
  can be maintained within an application, including:
 
@@ -47,7 +47,10 @@ Let's look at some ways ActiveRecord helps us to maintain data integrity.
 
 As you may recall from the SQL material, a **constraint**
  is a restriction on the data allowed in a table column (or columns).
-We've already seen a few of these in previous projects' migration files:
+ActiveRecord Migrations allow us to define constraints on our tables
+ from within Rails.
+We've already seen a few instances of this
+ in previous projects' migration files:
 
 ```ruby
 class CreateCountries < ActiveRecord::Migration
@@ -63,20 +66,20 @@ class CreateCountries < ActiveRecord::Migration
 end
 ```
 
-Different SQL implementations use a wide variety of different constraints;
- ActiveRecord supports some of these, but not all.
-The most important ones that it _does_ support are:
+Different SQL implementations use a variety of different constraints,
+ and while ActiveRecord supports some of these, it doesn't support them all.
+The most important ones that it _does_ support, across the board, are:
 
 -   **`null: false`**
 
-    Equivalent to the `NOT NULL` constraint in SQL.
-    This prevents the database from saving a row
+    Sets the `NOT NULL` constraint in SQL.
+    `NOT NULL` prevents the database from saving a row
      without a value in that particular column into the database.
 
     **EXAMPLE :**
-    Suppose I want to ensure that every country entered has a name -
+    Suppose you want to ensure that every country entered has a name -
      blank names are forbidden.
-    In the migration file for Countries, I can write:
+    In the migration file for Countries, you can write:
 
     ```ruby
     class CreateCountries < ActiveRecord::Migration
@@ -92,21 +95,24 @@ The most important ones that it _does_ support are:
     end
     ```
 
-    If I run this migation, and then open up the Rails Console,
-     I find that I am unable to `create` new Countries
+    If you run this migation, and then open up the Rails Console,
+     you will be unable to `create` new Countries
      without specifying names for them.
 
 -   **`unique: true` / `index: {unique: true}`**
 
-    A uniqueness constraint.
+    Sets the `UNIQUE` constraint in SQL.
     This can be used to define a single column as having only unique values,
-     or to specify that certain _combinations of column values_ must be unique.
+     or to specify that certain _combinations of column values_ must be unique;
+     it accomplishes this
+     by creating a special hidden `index` column in the database
+     that records unique combinations of other columns.
 
     **EXAMPLE :**
     Consider a second model, Person.
-    Suppose I want to ensure that each person has a unique phone number,
+    Suppose you want to ensure that each person has a unique phone number,
      and a unique full name (`given_name` + `surname`);
-     I might make the following change to the `CreatePeople` migration.
+     you might make the following change to the `CreatePeople` migration.
 
     ```ruby
     class CreatePeople < ActiveRecord::Migration
@@ -125,15 +131,18 @@ The most important ones that it _does_ support are:
     end
     ```
 
-    **Be careful**: a `NULL` value never equals anything, including itself,_
-     so `NULL` values are always unique.
-    This is sometimes desirable,
-     but in most cases we'll also want the `null:false` option.
+    When using `unique: ___ `, you will usually also want
+     to also specify `null: false`.
+    This is because  a `NULL` value never equals anything,
+     _including itself_,
+     so `NULL` values are always considered unique.
+    As such, if you don't add the `null: false`,
+     your supposedly-unique column values might contain
+     many (effectively identical) null values.
 
     > **NOTEWORTHY ASIDE**
     >
-    > Though it's not a constraint,
-    > you should know that `index: <hash>` passes on
+    > `index: <hash>` works by passing on
     > any parameters given in the hash to the `add_index` method.
     >
 
@@ -150,9 +159,9 @@ The most important ones that it _does_ support are:
 
 -   **`foreign_key: true` / `references: {foreign_key: true}`**
 
-      A referential constraint,
-       requiring that a row in a "child" table have
-       a matching identifier in the "parent" table.
+      Set the FOREIGN KEY constraint in SQL.
+      As you may recall, this requires that a foreign key
+       match an existing id in the table being referenced.
 
       _As with the uniqueness constraint,_
        _this doesn't prevent null values in the referring column,_
@@ -162,9 +171,9 @@ The most important ones that it _does_ support are:
       Now that we have 'Country' and 'Person' resources,
        suppose we want to link them together
        through a third resource called 'Citizenship'.
-      I run `rails g model Citizenship status:string date_obtained:date`,
-       which builds a new model and migration file.
-      I can then create two new empty migrations to link all of the tables.
+      Running `rails g model Citizenship status date_obtained:date`,
+       builds a new migration file and model.
+      You can then create two new empty migrations to link all of the tables.
 
       ```ruby
       class AddPeopleToCitizenships < ActiveRecord::Migration
@@ -182,12 +191,12 @@ The most important ones that it _does_ support are:
       end
       ```
 
-    > If the '...\_id' column was already added by a previous migration,
-    > I could use `add_foreign_key` method instead of `add_reference`
-    > to add the foreign key constraint to an existing column.
+    > `add_reference` creates a new column with a FOREIGN KEY constaint;
+    > if you want to add the foreign key constraint to an _existing_ column,
+    > use `add_foreign_key` instead of `add_reference`
 
-    Once I add the appropriate methods to the models,
-     I can test it in the Rails Console.
+    Once you add the appropriate methods to the models,
+     you can test it in the Rails Console.
 
     ```ruby
     class Country < ActiveRecord::Base
@@ -245,7 +254,7 @@ Let's look at how we might validate the same three things
        and it also disallows empty strings (for string properties).
 
       **EXAMPLE :**
-      To set an empty-value validator in our Country model, I might write
+      To set an empty-value validator in our Country model, you might write
 
       ```ruby
       class Country < ActiveRecord::Base
@@ -266,7 +275,7 @@ Let's look at how we might validate the same three things
        e.g. `{scope: <other property>}`.
 
       **EXAMPLE :**
-      To set some uniqueness validators in my Person model, I might write
+      To set some uniqueness validators in my Person model, you might write
 
       ```ruby
       class Person < ActiveRecord::Base
@@ -286,9 +295,9 @@ Let's look at how we might validate the same three things
        where `<model>` is the symbol we passed to `belongs_to`.
 
       **EXAMPLE :**
-      I want to test that a Citizenship instance refers to
-       an instance of Country and an instance of Person.
-       I might write the following:
+      You want to test that a Citizenship instance refers to
+       an instance of Country and an instance of Person;
+       in that case, you might write the following:
 
       ```ruby
       class Citizenship < ActiveRecord::Base
