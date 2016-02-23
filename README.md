@@ -219,7 +219,7 @@ The most important ones that it _does_ support, across the board, are:
     end
     ```
 
-### We Do :: ActiveRecord Constraints
+### Lab : ActiveRecord Constraints (1)
 
 In your squads,
  follow the example above and create three new resources
@@ -227,7 +227,7 @@ In your squads,
  and add non-null, uniqueness, and foreign key constraints
  to all three via the migration files.
 
-### You Do :: ActiveRecord Constraints
+### Lab : ActiveRecord Constraints (2)
 
 Individually, create two new resources in the same application
  that exhibit a one-to-many (`has_many`/`belongs_to`) relationship.
