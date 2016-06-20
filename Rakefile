@@ -1,12 +1,9 @@
-# Add your own tasks in files placed in lib/tasks ending in .rake,
-# for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
-
-require File.expand_path('../config/application', __FILE__)
-
-Rails.application.load_tasks
+# Tasks for ruby-template
 
 begin
   require 'rspec/core/rake_task'
-  RSpec::Core::RakeTask.new(:spec)
+  RSpec::Core::RakeTask.new(:test)
+  # rubocop:disable Lint/HandleExceptions
 rescue LoadError
+  # rubocop:enable Lint/HandleExceptions
 end
