@@ -27,11 +27,11 @@ There are several different places where data integrity
 
 However, each of these approaches has advantages and disadvantages.
 
-| Location   | Pro                                                                                         | Con                                                           |
-|:-----------|:--------------------------------------------------------------------------------------------|:--------------------------------------------------------------|
-| Database   | Useful if multiple apps use the same DB. Sometimes faster than other approaches.            | Implementation depends on the specific DB you use.            |
-| Client     | Independent of our back-end Implementation. Quick feedback for users.                       | Unreliable on its own, and can be circumvented.               |
-| Controller | Within the app, so it can't be circumvented. In Ruby, so it's independent of our DB choice. | Difficult to test and maintain. Controllers should be sparse! |
+| Location | Pro                                                                                         | Con                                                |
+|:---------|:--------------------------------------------------------------------------------------------|:---------------------------------------------------|
+| Database | Useful if multiple apps use the same DB. Sometimes faster than other approaches.            | Implementation depends on the specific DB you use. |
+| Client   | Independent of our back-end Implementation. Quick feedback for users.                       | Unreliable on its own, and can be circumvented.    |
+| API      | Within the app, so it can't be circumvented. In Ruby, so it's independent of our DB choice. | Not as fast as some SQL commands                   |
 
 Rails's perspective is that the best places for dealing with data integrity are
  in migrations and in the model,
@@ -70,7 +70,7 @@ Different SQL implementations use a variety of different constraints,
  and while ActiveRecord supports some of these, it doesn't support them all.
 The most important ones that it _does_ support, across the board, are:
 
--   **`null: false`**
+-   **null: false**
 
     Sets the `NOT NULL` constraint in SQL.
     `NOT NULL` prevents the database from saving a row
